@@ -137,22 +137,19 @@ export class Coder {
         const codeLines = code.split('\n');
         const exceptions = results.map(r => r.messages).flat();
 
-        if (exceptions.length > 0) {
-            exceptions.forEach((exc, index) => {
-                if (exc.line && exc.column ) {
-                    const errorLine = codeLines[exc.line - 1]?.trim() || 'Unable to retrieve error line content';
-                    result += `#ERROR ${index + 1}\n`;
-                    result += `Message: ${exc.message}\n`;
-                    result += `Location: Line ${exc.line}, Column ${exc.column}\n`;
-                    result += `Related Code Line: ${errorLine}\n`;
-                }
-            });
-            result += 'The code contains exceptions and cannot continue execution.';
-        } else {
-            return null;//no error
-        }
+        if (exceptions.length === 0) return null; // no error
 
-        return result ;
+        exceptions.forEach((exc, index) => {
+            if (exc.line && exc.column ) {
+                const errorLine = codeLines[exc.line - 1]?.trim() || 'Unable to retrieve error line content';
+                result += `#ERROR ${index + 1}\n`;
+                result += `Message: ${exc.message}\n`;
+                result += `Location: Line ${exc.line}, Column ${exc.column}\n`;
+                result += `Related Code Line: ${errorLine}\n`;
+            }
+        });
+        result += 'The code contains exceptions and cannot continue execution.';
+        return result;
     }
     // write custom code to file and import it
     // write custom code to file and prepare for evaluation

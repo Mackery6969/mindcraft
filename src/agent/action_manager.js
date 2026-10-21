@@ -16,11 +16,8 @@ export class ActionManager {
     }
 
     async runAction(actionLabel, actionFn, { timeout, resume = false } = {}) {
-        if (resume) {
-            return this._executeResume(actionLabel, actionFn, timeout);
-        } else {
-            return this._executeAction(actionLabel, actionFn, timeout);
-        }
+        if (resume) return this._executeResume(actionLabel, actionFn, timeout);
+        return this._executeAction(actionLabel, actionFn, timeout);
     }
 
     async stop() {
@@ -48,14 +45,14 @@ export class ActionManager {
             assert(actionLabel != null, 'actionLabel is required for new resume');
             this.resume_name = actionLabel;
         }
-        if (this.resume_func != null && (this.agent.isIdle() || new_resume) && (!this.agent.self_prompter.isActive() || new_resume)) {
-            this.currentActionLabel = this.resume_name;
-            let res = await this._executeAction(this.resume_name, this.resume_func, timeout);
-            this.currentActionLabel = '';
-            return res;
-        } else {
+        const canResume = this.resume_func != null && (this.agent.isIdle() || new_resume) && (!this.agent.self_prompter.isActive() || new_resume);
+        if (!canResume) {
             return { success: false, message: null, interrupted: false, timedout: false };
         }
+        this.currentActionLabel = this.resume_name;
+        let res = await this._executeAction(this.resume_name, this.resume_func, timeout);
+        this.currentActionLabel = '';
+        return res;
     }
 
     async _executeAction(actionLabel, actionFn, timeout = 10) {
