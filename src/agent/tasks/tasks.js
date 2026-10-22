@@ -576,7 +576,7 @@ export class Task {
                 console.log("nearby position", nearbyPosition);
                 const first_coord = this.data.blueprint.levels[0].coordinates;
                 bot.chat(`/tp @a ${first_coord[0]} ${first_coord[1]} ${first_coord[2]}`);
-                if (this.agent.agent_id === 0 && this.data.human_count > 0) {
+                if (this.agent.count_id === 0 && this.data.human_count > 0) {
                     for (let i = 0; i < this.data.human_count; i++) {
                         const username = this.data.usernames[i];
                         await bot.chat(`/tp ${username} ${nearbyPosition.x} ${nearbyPosition.y} ${nearbyPosition.z}`);
