@@ -60,6 +60,11 @@ export function createMindServer(host_public = false, port = 8080) {
             const agentName = req.params.agent;
             const rawName = req.params.name;
             const itemName = String(rawName).toLowerCase();
+            // item/block ids only; rejects path traversal like "..%2F..%2Fsecret"
+            if (!/^[a-z0-9_]+$/.test(itemName)) {
+                res.setHeader('Content-Type', 'image/svg+xml');
+                return res.status(400).send('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="100%" height="100%" fill="#444"/><text x="50%" y="55%" font-size="12" fill="#bbb" text-anchor="middle">?</text></svg>');
+            }
             const conn = agent_connections[agentName];
             const preferred = conn?.settings?.minecraft_version;
             const candidates = [];
@@ -203,20 +208,20 @@ export function createMindServer(host_public = false, port = 8080) {
                 return;
             }
             console.log(`${curAgentName} sending message to ${agentName}: ${json.message}`);
-            agent_connections[agentName].socket.emit('chat-message', curAgentName, json);
+            agent_connections[agentName].socket?.emit('chat-message', curAgentName, json);
         });
 
         socket.on('set-agent-settings', (agentName, settings) => {
             const agent = agent_connections[agentName];
             if (agent) {
                 agent.setSettings(settings);
-                agent.socket.emit('restart-agent');
+                agent.socket?.emit('restart-agent');
             }
         });
 
         socket.on('restart-agent', (agentName) => {
             console.log(`Restarting agent: ${agentName}`);
-            agent_connections[agentName].socket.emit('restart-agent');
+            agent_connections[agentName]?.socket?.emit('restart-agent');
         });
 
         socket.on('stop-agent', (agentName) => {
@@ -261,7 +266,7 @@ export function createMindServer(host_public = false, port = 8080) {
                 return;
 			}
 			try {
-                agent_connections[agentName].socket.emit('send-message', data);
+                agent_connections[agentName].socket?.emit('send-message', data);
 			} catch (error) {
 				console.error('Error: ', error);
 			}

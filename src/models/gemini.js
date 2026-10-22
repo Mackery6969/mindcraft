@@ -87,7 +87,7 @@ export class Gemini {
         try {
             console.log('Awaiting Google API vision response...');
             const result = await this.genAI.models.generateContent({
-                model: this.model_name,
+                model: this.model_name || "gemini-2.5-flash",
                 contents: contents,
                 safetySettings: this.safetySettings,
                 generationConfig: {
