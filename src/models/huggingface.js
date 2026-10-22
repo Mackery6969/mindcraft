@@ -6,7 +6,7 @@ export class HuggingFace {
   static prefix = 'huggingface';
   constructor(model_name, url, params) {
     // Remove 'huggingface/' prefix if present
-    this.model_name = model_name.replace('huggingface/', '');
+    this.model_name = model_name?.replace('huggingface/', '');
     this.url = url;
     this.params = params;
 

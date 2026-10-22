@@ -86,7 +86,7 @@ export class GroqCloudAPI {
             ]
         });
         
-        return this.sendRequest(imageMessages);
+        return this.sendRequest(imageMessages, systemMessage);
     }
 
     async embed(_) {
