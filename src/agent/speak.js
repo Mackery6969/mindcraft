@@ -1,4 +1,4 @@
-import { exec, spawn } from 'child_process';
+import { spawn } from 'child_process';
 import { promises as fs } from 'fs';
 import os from 'os';
 import path from 'path';
@@ -84,19 +84,30 @@ async function processQueue() {
 
     if (model === 'system') {
         // system TTS
-        const cmd = isWin
-            ? `powershell -NoProfile -Command "Add-Type -AssemblyName System.Speech; \
-            $s=New-Object System.Speech.Synthesis.SpeechSynthesizer; $s.Rate=2; \
-            $s.Speak('${txt.replace(/'/g,"''")}'); $s.Dispose()"`
+        // pass text via env/stdin so it is never interpreted by a shell or as options
+        const [cmd, args, env] = isWin
+            ? ['powershell', ['-NoProfile', '-Command', 'Add-Type -AssemblyName System.Speech; ' +
+                '$s=New-Object System.Speech.Synthesis.SpeechSynthesizer; $s.Rate=2; ' +
+                '$s.Speak($env:MINDCRAFT_TTS_TEXT); $s.Dispose()'],
+                { ...process.env, MINDCRAFT_TTS_TEXT: txt }]
             : isMac
-            ? `say "${txt.replace(/"/g,'\\"')}"`
-            : `espeak "${txt.replace(/"/g,'\\"')}"`;
+            ? ['say', ['-f', '-'], process.env]
+            : ['espeak', ['--stdin'], process.env];
 
-        exec(cmd, err => {
+        let finished = false;
+        const done = (err) => {
+            if (finished) return;
+            finished = true;
             if (err) console.error('TTS error', err);
             isSpeaking = false;
             processQueue();
-        });
+        };
+        const proc = spawn(cmd, args, { env, stdio: ['pipe', 'ignore', 'ignore'], windowsHide: true });
+        proc.on('error', done);
+        proc.on('close', () => done());
+        proc.stdin.on('error', () => {});
+        if (!isWin) proc.stdin.write(txt);
+        proc.stdin.end();
 
     } 
     else {
@@ -134,12 +145,19 @@ async function processQueue() {
                 const player = spawn('ffplay', ['-nodisp','-autoexit','pipe:0'], {
                     stdio: ['pipe','ignore','ignore']
                 });
-                player.stdin.write(Buffer.from(audioData, 'base64'));
-                player.stdin.end();
-                player.on('exit', () => {
+                let finished = false;
+                const done = (err) => {
+                    if (finished) return;
+                    finished = true;
+                    if (err) console.error('[TTS] ffplay error', err);
                     isSpeaking = false;
                     processQueue();
-                });
+                };
+                player.on('error', done);
+                player.on('exit', () => done());
+                player.stdin.on('error', () => {});
+                player.stdin.write(Buffer.from(audioData, 'base64'));
+                player.stdin.end();
             }
         } catch (e) {
             console.error('[TTS] Audio error', e);
