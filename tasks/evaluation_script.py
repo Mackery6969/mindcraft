@@ -134,7 +134,7 @@ def aggregate_results(local_folders):
 
     successful_tasks.sort()
 
-    if task_type == "construction":
+    if task_type == "construction" and total > 0:
         successful = successful / total
     
     return {
@@ -606,8 +606,9 @@ def edit_file(file, content_dict):
                 for key, value in content_dict.items():
                     if line.startswith(key):
                         f.write(f"{key}={value}\n")
-                    else:
-                        f.write(line)
+                        break
+                else:
+                    f.write(line)
         print(f"{file} updated with {content_dict}")  
     except Exception as e:
         print(f"Error editing file {file}: {e}")
