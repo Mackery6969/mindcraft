@@ -38,13 +38,17 @@ def download_s3_folders(bucket_name, s3_prefix, local_base_dir):
 
     try:
         # List objects with the prefix, delimited by '/' to find sub-prefixes (folders)
-        response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=s3_prefix, Delimiter='/')
+        paginator = s3_client.get_paginator('list_objects_v2')
+        s3_folder_prefixes = [
+            prefix['Prefix']
+            for page in paginator.paginate(Bucket=bucket_name, Prefix=s3_prefix, Delimiter='/')
+            for prefix in page.get('CommonPrefixes', [])
+        ]
 
-        if 'CommonPrefixes' not in response:
+        if not s3_folder_prefixes:
             print(f"No folders found under s3://{bucket_name}/{s3_prefix}")
             return downloaded_folders
 
-        s3_folder_prefixes = [prefix['Prefix'] for prefix in response['CommonPrefixes']]
         subfolder = s3_prefix.split('/')[-2]
 
         for s3_folder_prefix in tqdm(s3_folder_prefixes):
@@ -54,9 +58,13 @@ def download_s3_folders(bucket_name, s3_prefix, local_base_dir):
             downloaded_folders.append(local_folder_path)
 
             # Download files within the folder
-            objects_in_folder = s3_client.list_objects_v2(Bucket=bucket_name, Prefix=s3_folder_prefix)
-            if 'Contents' in objects_in_folder:
-                for obj in objects_in_folder['Contents']:
+            objects_in_folder = [
+                obj
+                for page in paginator.paginate(Bucket=bucket_name, Prefix=s3_folder_prefix)
+                for obj in page.get('Contents', [])
+            ]
+            if objects_in_folder:
+                for obj in objects_in_folder:
                     s3_key = obj['Key']
                     local_file_path = os.path.join(local_folder_path, os.path.basename(s3_key))
                     try:
@@ -171,10 +179,10 @@ def aggregate_results(local_folders):
     for folder_path in tqdm(local_folders):
         folder_name = os.path.basename(folder_path)
 
-        try: 
-            total += 1
+        try:
             result = extract_result(folder_path)
-            success = int(extract_result(folder_path))
+            success = int(result)
+            total += 1
             successful += success
 
             print(f"Folder: {folder_name} -> {success}")
