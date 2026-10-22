@@ -357,11 +357,12 @@ def reconfigure_tasks(task_path, new_task_path, num_agents=None, hells_kitchen=F
             task["recipes"] = new_recipes
             # assign inventory to the agents
             if num_agents is None:
-                num_agents = task.get("agent_count", 0) + task.get("human_count", 0)
+                task_num_agents = task.get("agent_count", 0) + task.get("human_count", 0)
             else:
+                task_num_agents = num_agents
                 task["agent_count"] = num_agents
             initial_inventory = {}
-            for i in range(num_agents):
+            for i in range(task_num_agents):
                 initial_inventory[i] = {}
             items_lst = list(inventory.keys())
             for i in range(len(items_lst)):
@@ -370,9 +371,9 @@ def reconfigure_tasks(task_path, new_task_path, num_agents=None, hells_kitchen=F
                 if inventory[items_lst[i]] == 1:
                     initial_inventory[agent_num][items_lst[i]] = 1
                 elif inventory[items_lst[i]] > 1:
-                    div = inventory[items_lst[i]] // num_agents
-                    rem = inventory[items_lst[i]] % num_agents
-                    for j in range(num_agents):
+                    div = inventory[items_lst[i]] // task_num_agents
+                    rem = inventory[items_lst[i]] % task_num_agents
+                    for j in range(task_num_agents):
                         initial_inventory[j][items_lst[i]] = div
                     j = 0
                     while j < rem:
@@ -440,7 +441,7 @@ test_items = ["bread", "golden_apple", "rabbit_stew", "cake", "baked_potato", "c
 # block_recipe_in_tasks("mindcraft/tasks/cooking_tasks/require_collab_test_2_items/2_agent.json", "mindcraft/tasks/cooking_tasks/require_collab_test_2_items/2_agent_block_recipe.json", 2)
 # make_all_possible_tasks(test_items, 2, 2, "mindcraft/tasks/cooking_tasks/require_collab_test_2_items/2_agent_blocked_action_remaining.json")
 
-reconfigure_tasks("mindcraft/tasks/cooking_tasks/require_collab_test_2_items/2_agent_hells_kitchen_full.json", "mindcraft/tasks/cooking_tasks/require_collab_test_2_items/2_agent_hells_kitchen_full_inventory.json", 2)
+reconfigure_tasks("mindcraft/tasks/cooking_tasks/require_collab_test_2_items/2_agent_hells_kitchen_full.json", "mindcraft/tasks/cooking_tasks/require_collab_test_2_items/2_agent_hells_kitchen_full_inventory.json", 2, True)
 
 # reconfigure_tasks("mindcraft/tasks/cooking_tasks/test_tasks/test_tasks.json", "mindcraft/tasks/cooking_tasks/require_collab_test_2_items/2_agent_block_recipe.json", 2)
 # reconfigure_tasks("mindcraft/tasks/cooking_tasks/test_tasks/hells_kitchen_test_tasks.json", "mindcraft/tasks/cooking_tasks/require_collab_test_2_items/2_agent_hells_kitchen.json", 2, True)
