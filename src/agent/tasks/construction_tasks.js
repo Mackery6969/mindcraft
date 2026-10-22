@@ -47,6 +47,10 @@ export function resetConstructionWorld(bot, blueprint) {
 export function checkLevelBlueprint(agent, levelNum) {
     const blueprint = agent.task.blueprint;
     const bot = agent.bot;
+    const numLevels = blueprint.data.levels.length;
+    if (!Number.isInteger(levelNum) || levelNum < 0 || levelNum >= numLevels) {
+        return `Level ${levelNum} does not exist. The blueprint has levels 0 to ${numLevels - 1}.`;
+    }
     const result = blueprint.checkLevel(bot, levelNum);
     if (result.mismatches.length === 0) {
         return `Level ${levelNum} is correct`;
@@ -735,10 +739,10 @@ export function proceduralGeneration(m = 20,
             case 0:
                 break;
             case 1:
-                addWindowsAsSquares(matrix, newZ, newY, newZ, newLength, newWidth, newDepth, material)
+                addWindowsAsSquares(matrix, newX, newY, newZ, newLength, newWidth, newDepth, material)
                 break;
             case 2:
-                addWindowsAsPlane(matrix, newZ, newY, newZ, newLength, newWidth, newDepth, material)
+                addWindowsAsPlane(matrix, newX, newY, newZ, newLength, newWidth, newDepth, material)
         }
 
 
