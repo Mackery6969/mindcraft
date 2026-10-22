@@ -72,6 +72,7 @@ export function initBot(username) {
     // when mineflayer sends position updates faster than 50ms apart
     let lastPositionUpdate = 0;
     let pendingPositionPacket = null;
+    let pendingPositionArgs = null;
     const POSITION_THROTTLE_MS = 50;
     const originalWrite = bot._client.write.bind(bot._client);
     bot._client.write = function(name, data) {
@@ -79,11 +80,12 @@ export function initBot(username) {
             const now = Date.now();
             if (now - lastPositionUpdate < POSITION_THROTTLE_MS) {
                 // Queue this packet so the last position update is never lost
+                pendingPositionArgs = [name, data];
                 if (!pendingPositionPacket) {
                     pendingPositionPacket = setTimeout(() => {
                         pendingPositionPacket = null;
                         lastPositionUpdate = Date.now();
-                        originalWrite(name, data);
+                        originalWrite(...pendingPositionArgs);
                     }, POSITION_THROTTLE_MS - (now - lastPositionUpdate));
                 }
                 return;

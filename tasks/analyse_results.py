@@ -43,7 +43,7 @@ def download_s3_folders(bucket_name, s3_prefix, local_base_dir):
             return downloaded_folders
 
         s3_folder_prefixes = [prefix['Prefix'] for prefix in response['CommonPrefixes']]
-        subfolder = s3_prefix.split('/')[-2]
+        subfolder = s3_prefix.rstrip('/').split('/')[-1]
 
         for s3_folder_prefix in tqdm(s3_folder_prefixes):
             folder_name = s3_folder_prefix.split('/')[-2] # Extract folder name
