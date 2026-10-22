@@ -1,3 +1,5 @@
+import assert from 'assert';
+
 export class ActionManager {
     constructor(agent) {
         this.agent = agent;
@@ -133,11 +135,10 @@ export class ActionManager {
             // Log the full stack trace
             console.error(err.stack);
             await this.stop();
-            err = err.toString();
 
             let message = this.getBotOutputSummary() +
                 '!!Code threw exception!!\n' +
-                'Error: ' + err + '\n' +
+                'Error: ' + err.toString() + '\n' +
                 'Stack trace:\n' + err.stack+'\n';
 
             let interrupted = this.agent.bot.interrupt_code;
